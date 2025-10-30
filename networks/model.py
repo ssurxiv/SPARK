@@ -6,44 +6,20 @@ from network.utils import compute_euclid_distance, add_full_rrwp
 from network.gnns import Cheb1, Cheb2, Hyperboloid, HyperbolicGraphConvolution, myCheb
 
 class NodeFeatureFusionMinimal(nn.Module):
-    """
-    mode:
-      - "minimal":  z = LN( x + gamma * W * decay_sum(p) )
-      - "legacy":   기존 방식(p->lin, concat, lin)
-    Args
-      Dx: x 채널 수, K: RRWP hop 수, out_dim: 최종 채널
-      alpha: 감쇠계수, learn_gamma: 전역 혼합계수 학습 여부
-      stopgrad_p: p 브랜치 stop-grad (권장 True)
-      position_dim: legacy용
-    """
     def __init__(self, Dx, K, out_dim,
                  mode="minimal",
-                 alpha=0.75,
+                 alpha=0.5,
                  learn_gamma=True,
                  gamma_init=0.5,
                  stopgrad_p=True,
                  position_dim=16):
         super().__init__()
-        assert mode in ["minimal","origin", "sum"]
+        assert mode in ["origin", "sum"]
         self.mode = mode
         self.alpha = alpha
         self.stopgrad_p = stopgrad_p
 
-        
-
-        if mode == "minimal":
-            self.ln_x   = nn.LayerNorm(Dx)
-            self.ln_out = nn.LayerNorm(out_dim)
-            self.p_proj = nn.Linear(1, Dx, bias=False)              # 아주 작은 선형
-            self.out    = nn.Identity() if out_dim==Dx else nn.Linear(Dx, out_dim, bias=True)
-            if learn_gamma:
-                # 전역 스칼라 혼합계수 gamma \in (0,1)
-                logit = torch.logit(torch.tensor(gamma_init, dtype=torch.float32).clamp(1e-4, 1-1e-4))
-                self._gamma = nn.Parameter(logit)
-            else:
-                self.register_buffer("_gamma_const", torch.tensor(gamma_init, dtype=torch.float32))
-                self._gamma = None
-        elif mode == "origin":
+        if mode == "origin":
             self.ln_rw   = nn.Linear(K, position_dim)               # 기존
             self.init_ln = nn.Linear(Dx + position_dim, out_dim)
         elif mode == 'sum':
@@ -196,8 +172,6 @@ class Spark(nn.Module):
                 graph_x_e = f_e(graph_x_e, edges)
                 graph_x_h = f_h(graph_x_h, edges)
 
-           
-                # DualGSL.forward 안에 한 번만 넣어서 확인
                 if not torch.isfinite(graph_x_e).all():
                     print("NaN in graph_x_e after GCN"); raise RuntimeError
                 if not torch.isfinite(graph_x_h).all():
