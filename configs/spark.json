@@ -1,0 +1,45 @@
+{
+    "seed": 100,
+    "gpu_id": 3,
+    "dataset": "MDD20",
+    "model": "SPARK",
+    "run_name": "proposed",
+    "model_params": {
+        "feature_dim": 32,
+        "layers": 1,
+        "position_dim": 112,
+        "random_walk": 8,
+        "init_dim": 112,
+        "topk_percentile": 0.5,
+        "learn_alpha": true,
+        "alpha": 1.0,
+        "temperature": 0.54
+    },
+    "dataset_params": {
+        "threshold": 50
+    },
+    "train_params": {
+        "epochs": 200,
+        "batch_size": 64,
+        "learning_rate": 1e-05,
+        "amp": true,
+        "clip_grad": 5.0,
+        "feature_type": "fisher"
+    },
+    "system": {
+        "out_dir": "/home/mip/disk4/sy/spark/out",
+        "out_csv": "/home/mip/disk4/sy/spark/out/grid_result.csv",
+        "num_workers": 2,
+        "pin_memory": true,
+        "prefetch_factor": 2,
+        "persistent_workers": true,
+        "drop_last": false,
+        "deterministic": false
+    },
+    "validation": {
+        "patience": 200,
+        "monitor": "val_acc"
+    },
+    "run_id": "251022173723",
+    "hyper_sig": "d_MDD20_b_64_e_200_l_1e-05_f_32_ln_1_rw_8_thr_50_pd_1"
+}
